@@ -1,10 +1,22 @@
-# Ignore junk folder
+# Ignore unneeded files
+Unneeded_files/
 junk/
 
+
+# Ignore Jupyter checkpoints
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
 
 # Ignore Python bytecode
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Ignore build artifacts
+*.egg-info/
+dist/
+build/
 
 # Ignore environment files
 .env
@@ -17,6 +29,10 @@ env/
 # Ignore IDE specific files
 .idea/
 *.swp
+
+# Ignore Claude Code local settings
+.claude/
+**/.claude/
 
 # Ignore any personal access token files.
 PersonalAccessToken.txt

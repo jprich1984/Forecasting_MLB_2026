@@ -1,43 +1,251 @@
-# MLB_2024: Predicting 2024 Season Outcomes
+# MLB Division Standings Prediction — 2026
 
-As the spring of 2024 approached, I began thinking about baseball. I had been eager to do a baseball project but had yet to get around to it.
+> Predicting final division standings for all 6 MLB divisions using preseason projected team statistics and a weighted XGBoost ensemble.
 
-I was particularly interested in how well one could predict the outcome of the entire season based solely on the teams' overall statistics for both pitching and hitting. Furthermore, I was interested in which statistics were most correlated with team wins. In this project, I use data from previous years to predict the outcome of the 2024 season. Particularly, I determine the amount of wins we can expect to see from each team. Who will be the division winners? Who will be in the wildcard games?
+---
 
-**Data Gathering and Processing:**
+## Table of Contents
+- [Overview](#overview)
+- [Results — 2026 Predictions](#results--2026-predictions)
+- [Methodology](#methodology)
+  - [Data](#data)
+  - [EDA & Temporal Trends](#eda--temporal-trends)
+  - [Preprocessing & Feature Engineering](#preprocessing--feature-engineering)
+  - [Model Architecture](#model-architecture)
+  - [Model Selection](#model-selection)
+- [Performance](#performance)
+- [Project Structure](#project-structure)
 
-Suprisingly, the data for this project was not easy to come by. There were no CSV files on the web which had columns for both team wins and team statistics. As such, the project became very much about data gathering and processing as much as modeling and analysis. Many of the Python files in this project are for building the dataset through web scraping.
+---
 
-**Important Note:** The web scraping scripts (`scrape_mlb.py`, etc.) are included to demonstrate how the dataset was constructed. However, due to potential changes in website structure or API availability, **it's highly unlikely these scripts will run successfully without significant modifications.** **The resulting CSV files from these scripts are provided in the repository's `data/` folder.**
+## Overview
 
-**Project Focus:**
+This project builds a machine learning pipeline to predict MLB division standings before the season begins. Given only preseason-projected team statistics — built bottom-up from the career stats of each team's current 2026 roster — the model predicts final win totals and division rankings for all 30 teams across 6 divisions.
 
-The main focus of this project is on:
+**Primary evaluation metric:** Kendall's τ — measures pairwise ranking accuracy across all division-year combinations, making it more meaningful than raw win prediction error for a standings problem.
 
-* **`Creating_2024_Team_Stats.ipynb`**: This notebook details the feature engineering and preprocessing steps. A key aspect of this process was calculating relative performance metrics, which show how a team's statistics compare to their division, league, and the entire MLB. These relative metrics proved to be highly important for accurate modeling.
-* **`Predicting_2024.ipynb`**: This notebook contains the modeling and results. Here we see the XGBoost model being created, tuned and evaluated.
+---
 
-**Model Performance:**
+## Results — 2026 Predictions
 
-The final XGBoost model achieved the following performance metrics:
+### AL East
+| Rank | Team | Projected Wins |
+|:----:|------|:--------------:|
+| 1 | NYY | 92 |
+| 2 | BOS | 91 |
+| 3 | BAL | 84 |
+| 4 | TOR | 80 |
+| 5 | TBR | 76 |
 
-* **R2 (Test Set):** 0.8440
-* **RMSE (Test Set):** 4.7704
+### AL Central
+| Rank | Team | Projected Wins |
+|:----:|------|:--------------:|
+| 1 | KCR | 89 |
+| 2 | DET | 83 |
+| 3 | CLE | 82 |
+| 4 | MIN | 74 |
+| 5 | CHW | 71 |
 
-**Model Improvements:**
+### AL West
+| Rank | Team | Projected Wins |
+|:----:|------|:--------------:|
+| 1 | HOU | 87 |
+| 2 | ATH | 81 |
+| 3 | SEA | 79 |
+| 4 | TEX | 78 |
+| 5 | LAA | 67 |
 
-Significant improvements were observed during the modeling process:
+### NL East
+| Rank | Team | Projected Wins |
+|:----:|------|:--------------:|
+| 1 | PHI | 93 |
+| 2 | ATL | 92 |
+| 3 | NYM | 84 |
+| 4 | MIA | 74 |
+| 5 | WSN | 58 |
 
-* **Grid Search:** Hyperparameter tuning using grid search led to a considerable increase in model performance.
-* **Permutation Feature Importance (PFI):** Feature selection based on PFI further refined the model, improving generalization capabilities, as evidenced by cross-validation scores.
+### NL Central
+| Rank | Team | Projected Wins |
+|:----:|------|:--------------:|
+| 1 | MIL | 88 |
+| 2 | CHC | 88 |
+| 3 | PIT | 86 |
+| 4 | CIN | 75 |
+| 5 | STL | 71 |
 
-**2024 Season Predictions and Observations:**
+### NL West
+| Rank | Team | Projected Wins |
+|:----:|------|:--------------:|
+| 1 | LAD | 105 |
+| 2 | SDP | 90 |
+| 3 | SFG | 78 |
+| 4 | ARI | 76 |
+| 5 | COL | 56 |
 
-As for the 2024 season, we will have to see how it shakes out. The predicted standings generally align with what one might expect, however I do notice some surprises. For example, I would not expect the Brewers to have as bad of a season as predicted. Furthermore, I would expect the Dodgers to produce more than 89 wins. Some of these discrepancies could possibly be explained by difficulties in the data gathering and preprocessing steps. Nevertheless, this was an interesting analysis and it reinforces our understanding about what statistics generally produce wins in the MLB.
+> **Total projected wins:** 2,428 &nbsp;|&nbsp; **Historical target:** 2,430 — near-perfect league-wide calibration.
 
-**How to Use This Repository:**
+### Projected Wild Card Teams
+| League | Team | Projected Wins |
+|--------|------|:--------------:|
+| AL | BOS | 91 |
+| AL | BAL | 84 |
+| AL | DET | 83 |
+| NL | ATL | 92 |
+| NL | SDP | 90 |
+| NL | CHC | 88 |
 
-1.  Clone the repository: `git clone https://github.com/jprich1984/MLB_2024.git`
-2.  Navigate to the project directory: `cd MLB_2024`
-3.  Install the required packages: `pip install -r requirements.txt`
-4.  Explore the notebooks `Creating_2024_Team_Stats.ipynb` and `Predicting_2024.ipynb` to understand the data processing, modeling, and results.
+---
+
+## Methodology
+
+### Data
+
+- **Training:** 1995–2025 team-season statistics (~870 team-seasons), excluding the 2020 COVID-shortened season
+- **Held-out test set:** 2019–2025 — temporally separated, never seen during model development
+- **2026 inference:** Projected team statistics built bottom-up from the career stats of each team's current roster
+
+**Data sources:**
+
+| Source | What It Provides | Script |
+|--------|-----------------|--------|
+| FanGraphs | 2026 projected rosters with playing-time weights | `rosters_mlb_api.py` |
+| MLB Stats API (`/api/v1/stats`) | Career hitting, pitching, and fielding stats for all rostered players | `scrape_mlb_api.py` |
+| MLB Stats API (`/api/v1`) | Historical team statistics, 1995–2025 | `fetch_all_team_stats.py` |
+
+### EDA & Temporal Trends
+
+Before modeling, each feature was examined for year-over-year drift using Spearman correlation with calendar year. Features with strong temporal trends can teach the model "it is a recent year" rather than "this team is strong" — a form of data leakage.
+
+![Temporal trend analysis](images/correlation_comparison_trend.png)
+
+Key findings:
+
+| Feature Group | Spearman ρ | Trend |
+|--------------|:-----------:|-------|
+| Strikeout stats (`SO`, `K/9`, `K/BB`) | +0.91–0.93 | Sharply increasing |
+| Batting average, hits allowed | −0.87–0.91 | Sharply decreasing |
+| Fielding percentage | +0.938 | Increasing |
+| Errors | −0.943 | Decreasing |
+| `SV_pct` (1995–1998) | — | Zero variance — data placeholder |
+
+**Actions taken:**
+- All features were expressed as **team stat relative to the league/division/MLB average** for that year (ratio for continuous rate stats, difference for bounded stats), so the model learns team quality relative to their era rather than absolute values that shift over time
+- `SV_pct` zero-variance era handled with an `is_pre_1999` binary flag rather than dropping the column
+
+### Preprocessing & Feature Engineering
+
+2026 team statistics were projected bottom-up from individual player career data:
+
+1. **Roster construction** — Players assigned roles (starter, reliever, closer, bench) with projected playing-time weights sourced from FanGraphs preseason projections
+2. **Team aggregation** — Counting stats normalized to per-game or per-inning rates, weighted by projected playing time, then scaled to a 162-game season. Closer statistics use a role-based split (**70% Closer / 30% Setup Men**) rather than playing-time weights due to the binary nature of save opportunities
+3. **Mean shifting** — League-wide projected means shifted to match historical averages, correcting for systematic projection bias without distorting team-to-team spread
+4. **Team code standardization** — Full franchise names (including historical variants: Florida Marlins, Montreal Expos, etc.) mapped to current 3-letter codes
+
+Derived statistics computed from raw API data:
+
+| Stat | Formula |
+|------|---------|
+| `stolenBasePercentage` | SB / (SB + CS) |
+| `babip` | (H − HR) / (AB − SO − HR) |
+| `P_strikeoutWalkRatio` | SO / BB |
+| `P_strikeoutsPer9Inn` | (SO / IP) × 9 |
+| `P_homeRunsPer9` | (HR / IP) × 9 |
+
+### Model Architecture
+
+Raw team statistics were transformed into **relative features** comparing each team to three reference groups:
+
+| Prefix | Reference Group | Why It Matters |
+|--------|----------------|----------------|
+| `DivDiff_` | Division average | Who wins the division title |
+| `LeagueDiff_` | League average | Wild card caliber |
+| `mlbDiff_` | MLB-wide average | Absolute team quality |
+
+This produced **69 relative features** across 23 base statistics covering hitting, pitching, and fielding.
+
+**Ensemble: 4-model weighted XGBoost**
+
+Three XGBoost models are each specialized on one reference frame, capturing a clean and conceptually distinct signal. A fourth model hedges against a known artifact in save percentage projections.
+
+| Component | Weight | Features | Purpose |
+|-----------|:------:|----------|---------|
+| XGBoost (Div) | 0.27 | `DivDiff_` only | Non-linear signal vs division competitors |
+| XGBoost (League) | 0.27 | `LeagueDiff_` only | Non-linear signal vs league |
+| XGBoost (MLB) | 0.27 | `mlbDiff_` only | Non-linear signal vs all of baseball |
+| XGBoost (no SV_pct) | 0.20 | All positive-importance features excl. `SV_pct` | Robustness against save projection artifacts |
+```
+Tuned hyperparameters:
+  max_depth=3 | n_estimators=300 | learning_rate=0.05
+  gamma=0.5   | subsample=0.8   | colsample_bytree=1.0
+```
+
+The final prediction averages all four models' win estimates, then ranks teams within each division. This mirrors how baseball itself works: teams must beat their division to win a title, but league and MLB-wide quality determines wild card eligibility.
+
+**Cross-validated permutation importance:**
+
+![CV permutation importance](images/cv_perm_imp_tuned_xgb.png)
+
+**SHAP feature importance:**
+
+![SHAP values](images/shap_mlb.png)
+
+### Model Selection
+
+Extensive experimentation covered Ridge regression, linear models, and mixed ensembles. A Ridge + XGBoost ensemble achieved a higher test τ of **0.8426** but was ultimately rejected for 2026 inference:
+
+- Multicollinearity caused counterintuitive coefficient signs — Ridge predicted the Angels to win the AL West despite having the worst pitching and hitting in their division
+- Ridge's global coefficients amplify projection artifacts with no ceiling; XGBoost's tree structure naturally caps any single feature's influence
+- The 2026 `SV_pct` distribution differs structurally from historical data due to projection methodology differences
+
+SHAP values confirm that all feature relationships in the selected ensemble are directionally sensible.
+
+---
+
+## Performance
+
+| Metric | Value |
+|--------|:-----:|
+| Test Kendall's τ | **0.8146** |
+| Test R² (win prediction) | **0.8913** |
+| Cross-validation τ | **0.8138** |
+
+Train/test split is **temporal** — the model is trained on 1995–2018 and evaluated on 2019–2025, which is the realistic inference setting (predicting unseen future seasons from past data only).
+
+---
+
+## Project Structure
+```
+.
+├── notebooks/
+│   ├── Preprocessing.ipynb        # Roster construction, stat projection, mean shifting
+│   ├── EDA.ipynb                  # Temporal trend analysis, zero-variance checks
+│   └── Modeling.ipynb             # Feature engineering, model training, evaluation
+├── scripts/
+│   ├── rosters_mlb_api.py         # Pull 2026 projected rosters and playing-time weights from FanGraphs
+│   ├── scrape_mlb_api.py          # Pull career stats from MLB Stats API (/api/v1/stats)
+│   ├── fetch_all_team_stats.py    # Fetch historical team statistics (/api/v1)
+│   └── fetch_team_fielding.py     # Fetch historical fielding data
+├── data/
+│   ├── CareerHittingStatsAlltime.csv
+│   ├── CareerPitchingStatsAlltime.csv
+│   ├── CareerFieldingStatsAlltime.csv
+│   ├── PlayerTeamsAll_2026.csv
+│   ├── Processed_2026_Team_Data.csv
+│   └── Processed_Historical_Team_Wins_Data.csv
+├── images/
+│   ├── correlation_comparison_trend.png
+│   ├── cv_perm_imp_tuned_xgb.png
+│   └── shap_mlb.png
+└── requirements.txt
+```
+
+---
+
+## Setup
+```bash
+git clone https://github.com/jprich1984/Forecasting_MLB_2026.git
+cd Predicting2026_MLB
+pip install -r requirements.txt
+```
+The Generated CSV files are provided in this repository so there is no need to run the api scripts
+Open the notebooks in order: `Preprocessing.ipynb` → `EDA.ipynb` → `Modeling.ipynb`.
