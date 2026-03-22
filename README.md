@@ -31,68 +31,68 @@ This project builds a machine learning pipeline to predict MLB division standing
 ### AL East
 | Rank | Team | Projected Wins |
 |:----:|------|:--------------:|
-| 1 | NYY | 92 |
-| 2 | BOS | 91 |
+| 1 | NYY | 91 |
+| 2 | BOS | 89 |
 | 3 | BAL | 84 |
-| 4 | TOR | 80 |
-| 5 | TBR | 76 |
+| 4 | TOR | 82 |
+| 5 | TBR | 75 |
 
 ### AL Central
 | Rank | Team | Projected Wins |
 |:----:|------|:--------------:|
-| 1 | KCR | 89 |
-| 2 | DET | 83 |
-| 3 | CLE | 82 |
-| 4 | MIN | 74 |
-| 5 | CHW | 71 |
+| 1 | DET | 90 |
+| 2 | KCR | 81 |
+| 3 | CLE | 80 |
+| 4 | MIN | 73 |
+| 5 | CHW | 67 |
 
 ### AL West
 | Rank | Team | Projected Wins |
 |:----:|------|:--------------:|
-| 1 | HOU | 87 |
-| 2 | ATH | 81 |
-| 3 | SEA | 79 |
-| 4 | TEX | 78 |
-| 5 | LAA | 67 |
+| 1 | SEA | 91 |
+| 2 | ATH | 82 |
+| 3 | HOU | 81 |
+| 4 | TEX | 80 |
+| 5 | LAA | 71 |
 
 ### NL East
 | Rank | Team | Projected Wins |
 |:----:|------|:--------------:|
-| 1 | PHI | 93 |
-| 2 | ATL | 92 |
-| 3 | NYM | 84 |
-| 4 | MIA | 74 |
-| 5 | WSN | 58 |
+| 1 | NYM | 93 |
+| 2 | PHI | 92 |
+| 3 | ATL | 92 |
+| 4 | MIA | 76 |
+| 5 | WSN | 61 |
 
 ### NL Central
 | Rank | Team | Projected Wins |
 |:----:|------|:--------------:|
-| 1 | MIL | 88 |
-| 2 | CHC | 88 |
-| 3 | PIT | 86 |
-| 4 | CIN | 75 |
-| 5 | STL | 71 |
+| 1 | CHC | 89 |
+| 2 | PIT | 85 |
+| 3 | MIL | 84 |
+| 4 | CIN | 79 |
+| 5 | STL | 65 |
 
 ### NL West
 | Rank | Team | Projected Wins |
 |:----:|------|:--------------:|
-| 1 | LAD | 105 |
+| 1 | LAD | 101 |
 | 2 | SDP | 90 |
 | 3 | SFG | 78 |
-| 4 | ARI | 76 |
-| 5 | COL | 56 |
+| 4 | ARI | 77 |
+| 5 | COL | 55 |
 
-> **Total projected wins:** 2,428 &nbsp;|&nbsp; **Historical target:** 2,430 — near-perfect league-wide calibration.
+> **Total projected wins:** 2,434 &nbsp;|&nbsp; **Historical target:** 2,430 — near-perfect league-wide calibration.
 
 ### Projected Wild Card Teams
 | League | Team | Projected Wins |
 |--------|------|:--------------:|
-| AL | BOS | 91 |
+| AL | BOS | 89 |
 | AL | BAL | 84 |
-| AL | DET | 83 |
+| AL | ATH | 82 |
+| NL | PHI | 92 |
 | NL | ATL | 92 |
 | NL | SDP | 90 |
-| NL | CHC | 88 |
 
 ---
 
